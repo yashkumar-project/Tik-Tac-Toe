@@ -1,49 +1,64 @@
-let boxes = document.querySelectorAll(".box");
-let resetbtn = document.querySelector("#resetbutton");
+const board = document.getElementById("board");
+const statusText = document.getElementById("status");
+const resetBtn = document.getElementById("reset");
 
-let turn0=true;
+let currentPlayer = "X";
+let gameActive = true;
+let gameState = Array(9).fill("");
 
 const winPatterns = [
-  [0,1,2],
-  [3,4,5],
-  [6,7,8],
-  [0,4,8],
-  [1,4,7],
-  [2,5,8],
-  [0,3,6],
-  [2,4,6]
+  [0,1,2], [3,4,5], [6,7,8],
+  [0,3,6], [1,4,7], [2,5,8],
+  [0,4,8], [2,4,6]
 ];
 
-
-boxes.forEach((box) => {
-  box.addEventListener("click", () => {
-    console.log("box is clicked");
-    if (turn0){
-        box.innerText="O";
-        box.classList.add("text0");
-
-        turn0=false
-    } else {
-        box.innerText="X";
-        box.classList.add("textx");
-        turn0=true;
-    }
-    box.disabled = true;
-    checkWinner (boxes);
+function createBoard() {
+  board.innerHTML = "";
+  gameState.forEach((value, index) => {
+    const cell = document.createElement("div");
+    cell.classList.add("cell");
+    cell.textContent = value;
+    cell.addEventListener("click", () => handleMove(index));
+    board.appendChild(cell);
   });
-});
+}
 
-const checkWinner = (boxes) => {
+function handleMove(index) {
+  if (!gameActive || gameState[index] !== "") return;
+
+  gameState[index] = currentPlayer;
+  checkResult();
+  currentPlayer = currentPlayer === "X" ? "O" : "X";
+  statusText.textContent = `Player ${currentPlayer}'s turn`;
+  createBoard();
+}
+
+function checkResult() {
   for (let pattern of winPatterns) {
-    let pos1val = boxes[pattern[0]].innerText;
-    let pos2val = boxes[pattern[1]].innerText;
-    let pos3val = boxes[pattern[2]].innerText;
-
-    if (pos1val !== "" && pos2val !== "" && pos3val !== "") {
-      if (pos1val === pos2val && pos2val === pos3val) {
-        console.log("winner", pos1val);
-      }
+    const [a, b, c] = pattern;
+    if (
+      gameState[a] &&
+      gameState[a] === gameState[b] &&
+      gameState[a] === gameState[c]
+    ) {
+      statusText.textContent = `🎉 Player ${gameState[a]} wins!`;
+      gameActive = false;
+      return;
     }
   }
-};
 
+  if (!gameState.includes("")) {
+    statusText.textContent = "🤝 It's a draw!";
+    gameActive = false;
+  }
+}
+
+resetBtn.addEventListener("click", () => {
+  gameState = Array(9).fill("");
+  currentPlayer = "X";
+  gameActive = true;
+  statusText.textContent = "Player X's turn";
+  createBoard();
+});
+
+createBoard();
